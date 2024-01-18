@@ -3,6 +3,7 @@ package analyzer
 import (
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -11,37 +12,30 @@ import (
 	"golang.org/x/net/html"
 )
 
-type AnalysisData struct {
-	HtmlVersion  string
-	Title        string
-	HeadingsDist map[string]int
-}
-
-type parsingState struct {
-	currTag string
-}
-
 var headingRegex = regexp.MustCompile(`(?i)h\d`)
 
 func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
+	log.Printf("Starting the anlysis of url: %s", getUrl)
+
 	parsedUrl, err := url.Parse(getUrl)
 	if err != nil {
 		return nil, errors.New("Given URL is malformed!")
 	}
 
-	info := &AnalysisData{HtmlVersion: "5", HeadingsDist: map[string]int{}}
+	info := NewAnalysis(getUrl)
 	errp := fetchUrlContent(parsedUrl, info)
 	if errp != nil {
 		return nil, errp
 	}
 
+	Crawl(info)
 	return info, nil
 }
 
 func fetchUrlContent(url *url.URL, info *AnalysisData) error {
 	resp, err := http.Get(url.String())
 	if err != nil {
-		return errors.New("Cannt fetch the content from url!")
+		return errors.New("Cannot fetch the content from url!")
 	}
 
 	defer resp.Body.Close()
@@ -55,6 +49,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) error {
 		return errors.New("Only HTML content types are supported!")
 	}
 
+	log.Printf("Recieved a valid html content from %s", url.String())
 	t := html.NewTokenizer(resp.Body)
 	status := &parsingState{}
 
@@ -94,7 +89,14 @@ func processToken(token *html.Token, info *AnalysisData, status *parsingState) {
 		if token.Data == "title" {
 			status.currTag = "title"
 		} else if headingRegex.MatchString(token.Data) {
-			info.HeadingsDist[strings.ToUpper(token.Data)]++
+			info.HeadingsCount[strings.ToUpper(token.Data)]++
+		} else if token.Data == "a" {
+			for _, v := range token.Attr {
+				if strings.ToLower(v.Key) == "href" {
+					info.allLinks[v.Val] = true
+					break
+				}
+			}
 		}
 	} else if token.Type == html.EndTagToken {
 		if status.currTag != "" {

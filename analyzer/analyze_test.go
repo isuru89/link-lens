@@ -14,10 +14,16 @@ func TestAnalyzeUrl(t *testing.T) {
 		}
 
 		assert.Equal(t, &AnalysisData{
+			SourceUrl:   "https://go.dev",
 			HtmlVersion: "5",
 			Title:       "The Go Programming Language",
-			HeadingsDist: map[string]int{
+			HeadingsCount: map[string]int{
 				"H1": 1, "H2": 4, "H3": 4,
+			},
+			LinkStats: LinkStats{
+				InternalLinks: 44,
+				ExternalLinks: 48,
+				InvalidLinks:  4,
 			}},
 			info)
 
@@ -30,9 +36,11 @@ func TestAnalyzeUrl(t *testing.T) {
 		}
 
 		assert.Equal(t, &AnalysisData{
-			HtmlVersion:  "4",
-			Title:        "Appendix A: A sample style sheet for HTML 4.0",
-			HeadingsDist: map[string]int{"H1": 1}},
+			SourceUrl:     "https://www.w3.org/TR/1998/REC-CSS2-19980512/sample.html",
+			HtmlVersion:   "4",
+			Title:         "Appendix A: A sample style sheet for HTML 4.0",
+			HeadingsCount: map[string]int{"H1": 1},
+			LinkStats:     LinkStats{InternalLinks: 7, ExternalLinks: 0}},
 			info)
 
 	})
