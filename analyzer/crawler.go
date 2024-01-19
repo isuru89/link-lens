@@ -8,7 +8,7 @@ import (
 func Crawl(info *AnalysisData) {
 	linkStats := LinkStats{}
 	if len(info.allLinks) == 0 {
-		log.Printf("No links found in the site: %s. Nothing to crawl!", info.SourceUrl)
+		log.Printf("Nothing to crawl! No links found in the site: %s.", info.SourceUrl)
 		return
 	}
 

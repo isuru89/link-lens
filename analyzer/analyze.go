@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -41,7 +42,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return errors.New("Unsuccessful status code returned for the given URL!")
+		return errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode))
 	}
 
 	contentTypeHeader := resp.Header.Get("content-type")

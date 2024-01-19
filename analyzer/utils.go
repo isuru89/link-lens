@@ -83,6 +83,7 @@ func FindUrlValidity(checkUrl string) (bool, int) {
 	defer resp.Body.Close()
 
 	// we still dont care sites returning html content with with status code >=400
+	// e.g. Nginx 404/5xx
 	if resp.StatusCode >= 300 {
 		return false, resp.StatusCode
 	}
