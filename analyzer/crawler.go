@@ -22,8 +22,6 @@ func Crawl(info *AnalysisData) {
 	info.LinkStats = linkStats
 
 	crawlForValidity(info)
-
-	info.allLinks = nil
 }
 
 func crawlForValidity(info *AnalysisData) {
@@ -57,5 +55,7 @@ func crawlUrl(url string, info *AnalysisData, mtx *sync.Mutex) {
 		mtx.Lock()
 		info.LinkStats.InvalidLinks++
 		mtx.Unlock()
+	} else {
+		log.Printf("link ok! %s [Status: %d]", checkUrl, statusCode)
 	}
 }

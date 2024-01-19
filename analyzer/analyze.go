@@ -30,6 +30,8 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 	}
 
 	Crawl(info)
+	info.allLinks = nil
+
 	return info, nil
 }
 
@@ -78,7 +80,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) error {
 			processText(string(t.Text()), info, status)
 		}
 
-		if tokenType == html.StartTagToken || tokenType == html.EndTagToken {
+		if tokenType == html.StartTagToken || tokenType == html.EndTagToken || tokenType == html.SelfClosingTagToken {
 			node := t.Token()
 			processToken(&node, info, status)
 		}
@@ -86,7 +88,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) error {
 }
 
 func processToken(token *html.Token, info *AnalysisData, status *parsingState) {
-	if token.Type == html.StartTagToken {
+	if token.Type == html.StartTagToken || token.Type == html.SelfClosingTagToken {
 		if token.Data == "title" {
 			status.currTag = "title"
 		} else if headingRegex.MatchString(token.Data) {

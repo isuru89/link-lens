@@ -78,6 +78,7 @@ func getFinalUrl(href, sourceUrl string) string {
 func FindUrlValidity(checkUrl string) (bool, int) {
 	resp, err := http.Get(checkUrl)
 	if err != nil {
+		// we swallow the error, because caller cares only about status
 		return false, 999
 	}
 	defer resp.Body.Close()
