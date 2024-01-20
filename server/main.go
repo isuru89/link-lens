@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	webDir := "./web"
+	webDir := "./web/build"
 	var port int
 	var serveUI bool
 	flag.BoolVar(&serveUI, "ui", true, "Serve the UI or not?")
