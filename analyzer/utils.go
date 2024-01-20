@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var baseUrlRegex = regexp.MustCompile(`(?i)([a-zA-Z]+://[^/]+)/?`)
+var baseUrlRegex = regexp.MustCompile(`(?i)(https?://[^/]+)/?`)
 
 // concatUrl returns a valid concatenated url by combining both
 // baseUrl and path parameters mixing forward slashes (/) correctly.
@@ -49,16 +49,30 @@ func isAnchorLink(href string) bool {
 // getFinalUrl returns the final absolute url we need to fetch or check.
 // This modifies the href as necessary with the source url analyzing.
 func getFinalUrl(href, sourceUrl string) string {
+	if sourceUrl == "" {
+		panic("source URL cannot be empty!")
+	}
+
+	baseUrlParts := baseUrlRegex.FindStringSubmatch(sourceUrl)
+	if baseUrlParts == nil {
+		panic("Unable to find valid base url! Either its unsupported portocol or malformed url!")
+	}
+
+	if href == "" {
+		return sourceUrl
+	}
+
 	if isAbsoluteUrl(href) {
+		// check for valid protocol
+		hrefParts := baseUrlRegex.FindStringSubmatch(href)
+		if hrefParts == nil {
+			panic("Unsupported href! Either its unsupported portocol or malformed url!")
+		}
 		return href
 	} else if isAnchorLink(href) {
 		return sourceUrl + href
 	}
 
-	baseUrlParts := baseUrlRegex.FindStringSubmatch(sourceUrl)
-	if baseUrlParts == nil {
-		panic("Cannot find base url!")
-	}
 	baseUrl := baseUrlParts[1]
 
 	if isRelativeUrl(href) {
@@ -66,8 +80,11 @@ func getFinalUrl(href, sourceUrl string) string {
 	}
 
 	pos := strings.LastIndex(sourceUrl, "/")
-	if pos > 0 {
+	dpos := strings.LastIndex(sourceUrl, "//")
+	if pos > 0 && dpos < pos-1 {
 		return sourceUrl[:pos+1] + href
+	} else if pos > 0 && dpos == pos-1 {
+		return concatUrl(sourceUrl, href)
 	}
 	return href
 }
