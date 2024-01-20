@@ -24,48 +24,47 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 	}
 
 	info := NewAnalysis(getUrl)
-	errp := fetchUrlContent(parsedUrl, info)
+	status, errp := fetchUrlContent(parsedUrl, info)
 	if errp != nil {
 		return nil, errp
 	}
 
-	Crawl(info)
+	crawl(info, status)
 
-	info.PageType = Unknown
-	info.allLinks = nil
+	derivePageType(status, info)
 
 	return info, nil
 }
 
-func fetchUrlContent(url *url.URL, info *AnalysisData) error {
+func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	resp, err := http.Get(url.String())
 	if err != nil {
-		return errors.New("Cannot fetch the content from url!")
+		return nil, errors.New("Cannot fetch the content from url!")
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode))
+		return nil, errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode))
 	}
 
 	contentTypeHeader := resp.Header.Get("content-type")
 	if strings.Index(strings.ToLower(contentTypeHeader), "text/html") < 0 {
-		return errors.New("Only HTML content types are supported!")
+		return nil, errors.New("Only HTML content types are supported!")
 	}
 
 	log.Printf("Recieved a valid html content from %s", url.String())
 	t := html.NewTokenizer(resp.Body)
-	status := &parsingState{}
+	status := &parsingState{inputTypeCounts: map[string]int{}, allLinks: map[string]bool{}}
 
 	for {
 		tokenType := t.Next()
 
 		if tokenType == html.ErrorToken {
 			if t.Err() == io.EOF {
-				return nil
+				return status, nil
 			}
-			return t.Err()
+			return status, t.Err()
 		}
 
 		if tokenType == html.DoctypeToken {
@@ -97,8 +96,15 @@ func processToken(token *html.Token, info *AnalysisData, status *parsingState) {
 			info.HeadingsCount[strings.ToUpper(token.Data)]++
 		} else if token.Data == "a" {
 			for _, v := range token.Attr {
-				if strings.ToLower(v.Key) == "href" {
-					info.allLinks[v.Val] = true
+				if v.Key == "href" {
+					status.allLinks[v.Val] = true
+					break
+				}
+			}
+		} else if token.Data == "input" {
+			for _, v := range token.Attr {
+				if v.Key == "type" {
+					status.inputTypeCounts[v.Val]++
 					break
 				}
 			}
@@ -113,5 +119,13 @@ func processToken(token *html.Token, info *AnalysisData, status *parsingState) {
 func processText(content string, info *AnalysisData, status *parsingState) {
 	if status.currTag == "title" {
 		info.Title = content
+	}
+}
+
+func derivePageType(status *parsingState, info *AnalysisData) {
+	if status.inputTypeCounts["password"] == 1 && status.inputTypeCounts["submit"] == 1 {
+		info.PageType = LoginForm
+	} else {
+		info.PageType = Unknown
 	}
 }

@@ -25,7 +25,10 @@ func TestAnalyzeUrl_LinkTypesCrawl(t *testing.T) {
 		</html>`)
 	mockHtmlUrl("/siterelative", `<!doctype html><html></html>`)
 	mockHtmlUrl("/a/b/pathrelative/page1", `<!doctype html><html>page2</html>`)
-	mockHtmlUrl("/test/x", `<!doctype html><html>other-site</html>`)
+	gock.New("https://www.othersite.com/test/x").
+		Reply(200).
+		AddHeader("content-type", "text/html").
+		BodyString(`<!doctype html><html>other-site</html>`)
 
 	t.Run("Link Types Test", func(t *testing.T) {
 		// WHEN
@@ -68,11 +71,14 @@ func TestAnalyzeUrl_InAccessibleLinks(t *testing.T) {
 		</html>`)
 	mockHtmlUrl("/siterelative", `<!doctype html><html></html>`)
 	mockHtmlUrl("/check/pathrelative/page1", `<!doctype html><html>page2</html>`)
-	mockHtmlUrl("/test/x", `<!doctype html><html>other-site</html>`)
 	mockHtmlUrlWithStatusCode("/check/pathrelative/pagenx", `<!doctype html><html>page 404</html>`, 404)
 	gock.New("https://www.linklens.com").
 		Path("/check/pathrelative/pageerr").
 		ReplyError(errors.New("Throwing error when page load"))
+	gock.New("https://www.othersite.com/test/x").
+		Reply(200).
+		AddHeader("content-type", "text/html").
+		BodyString(`<!doctype html><html>External Site</html>`)
 
 	t.Run("Link Inaccessibility Test", func(t *testing.T) {
 		// WHEN
@@ -224,7 +230,7 @@ func TestAnalyzeUrl_IsLoginForm(t *testing.T) {
 		<body>
 			<form>
 				<input type="text" name="email"></input>
-				<input type="password" name="password"></input>
+				<INPUT TYPE="password" name="password"></input>
 				<input type="submit">Login</button>
 			</form>
 		</body>

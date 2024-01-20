@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-func Crawl(info *AnalysisData) {
+func crawl(info *AnalysisData, status *parsingState) {
 	linkStats := LinkStats{}
-	if len(info.allLinks) == 0 {
+	if len(status.allLinks) == 0 {
 		log.Printf("Nothing to crawl! No links found in the site: %s.", info.SourceUrl)
 		return
 	}
 
-	for k := range info.allLinks {
+	for k := range status.allLinks {
 		if isAbsoluteUrl(k) {
 			linkStats.ExternalLinks++
 		} else {
@@ -21,15 +21,15 @@ func Crawl(info *AnalysisData) {
 	}
 	info.LinkStats = linkStats
 
-	crawlForValidity(info)
+	crawlForValidity(info, status)
 }
 
-func crawlForValidity(info *AnalysisData) {
+func crawlForValidity(info *AnalysisData, status *parsingState) {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	log.Printf("Starting crawling for #%d links...", len(info.allLinks))
-	for k := range info.allLinks {
+	log.Printf("Starting crawling for #%d links...", len(status.allLinks))
+	for k := range status.allLinks {
 		if !isAnchorLink(k) {
 			wg.Add(1)
 
@@ -48,7 +48,7 @@ func crawlForValidity(info *AnalysisData) {
 
 func crawlUrl(url string, info *AnalysisData, mtx *sync.Mutex) {
 	checkUrl := getFinalUrl(url, info.SourceUrl)
-	isValid, statusCode := FindUrlValidity(checkUrl)
+	isValid, statusCode := findUrlValidity(checkUrl)
 
 	if !isValid {
 		log.Printf("Inaccessible link found! %s [Status: %d]", checkUrl, statusCode)

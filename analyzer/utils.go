@@ -92,7 +92,7 @@ func getFinalUrl(href, sourceUrl string) string {
 // FindUrlValidity returns true if this given link is a valid one or not
 // by checking whether it returns a 2xx response.
 // Note: This method does not strictly check the content-type.
-func FindUrlValidity(checkUrl string) (bool, int) {
+func findUrlValidity(checkUrl string) (bool, int) {
 	resp, err := http.Get(checkUrl)
 	if err != nil {
 		// we swallow the error, because caller cares only about status

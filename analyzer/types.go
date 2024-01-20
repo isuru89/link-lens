@@ -16,13 +16,14 @@ type AnalysisData struct {
 	HtmlVersion   string
 	Title         string
 	HeadingsCount map[string]int
-	allLinks      map[string]bool
 	LinkStats     LinkStats
 	PageType      uint
 }
 
 type parsingState struct {
-	currTag string
+	allLinks        map[string]bool
+	currTag         string
+	inputTypeCounts map[string]int
 }
 
 func (a *AnalysisData) ID() string {
@@ -33,7 +34,6 @@ func NewAnalysis(url string) *AnalysisData {
 	return &AnalysisData{
 		SourceUrl:     url,
 		HtmlVersion:   "5",
-		allLinks:      map[string]bool{},
 		HeadingsCount: map[string]int{},
 		LinkStats:     LinkStats{},
 	}
