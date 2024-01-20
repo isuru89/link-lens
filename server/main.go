@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"web/main/analyzer"
+	"server/main/analyzer"
 
 	"github.com/gorilla/mux"
 )
