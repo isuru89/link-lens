@@ -1,6 +1,6 @@
 
-<!-- [![Build](https://github.com/isuru89/link-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/isuru89/link-lens/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/isuru89/link-lens/graph/badge.svg?token=KRTRYTDDK7)](https://codecov.io/gh/isuru89/link-lens) -->
+[![Build](https://github.com/isuru89/link-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/isuru89/link-lens/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/isuru89/link-lens/graph/badge.svg?token=KRTRYTDDK7)](https://codecov.io/gh/isuru89/link-lens)
 
 
 # Link-Lens
@@ -15,6 +15,7 @@ Following information will be reported:
      * No of external links
      * No of internal links
      * No of inaccessible links (invalid/broken links)
+     * Full URLs of inaccessible links
   * Is a login form or not?
 
 ## How to Run
@@ -25,20 +26,42 @@ Following information will be reported:
 ### Steps
 
  1. Clone the repository and then move to the folder.
-```bash
+```
 git clone https://github.com/isuru89/link-lens.git && cd link-lens
 ```
 
  2. Execute the below command.
-```bash
+```
 go run server/...
+```
+
+  By default, the server will be running on port `8080`. If you want to change this behaviour,
+  you can use `--port` argument to pass another port.
+
+```
+go run server/... --port 8070
+```
+
+**Note:** If you want to build an executable instead of running directly with source code, execute the below commands to get an executable.
+
+```
+cd server
+go build -o linklens
+```
+
+Above command will create a binary file called `linklens` inside the `server` folder and you can execute it using below command.
+
+```
+./linklens
 ```
 
 #### Using UI
 
- 3. Open a browser and navigate to `http://localhost:8080`
- 4. Type a URL you want to analyze.
- 5. Click `Analyze` button.
+Make sure you are running the program using any of the above methods.
+
+ * Open a browser and navigate to `http://localhost:8080`. If you have changed the port, use it instead of 8080.
+ * Type a URL you want to analyze.
+ * Click `Analyze` button.
 
 #### Using API
 
@@ -74,6 +97,19 @@ It will return a response similar to what shown below, if the operation was succ
    },
    "PageType": "Unknown"
 }
+```
+
+### Configurations
+
+The link-lens program will accept below configurations via command line arguments.
+
+  * `-port`: Port of the server. (*Default port is 8080*)
+  * `-ui`: Whether to serve UI or not (*Default is yes*)
+
+At anytime, it is possible to know about accepting arguments by invoking help command.
+
+```
+./linklens -h
 ```
 
 ### FAQs

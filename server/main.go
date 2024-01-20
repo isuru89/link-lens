@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"server/main/analyzer"
@@ -10,14 +12,29 @@ import (
 )
 
 func main() {
+	webDir := "./web"
+	var port int
+	var serveUI bool
+	flag.BoolVar(&serveUI, "ui", true, "Serve the UI or not?")
+	flag.IntVar(&port, "port", 8080, "Port for the service")
+	flag.Parse()
+
 	r := mux.NewRouter()
 
+	// register routes
 	r.HandleFunc("/api/health", HealthEndPoint).Methods("GET")
 	r.HandleFunc("/api/analyze", PostAnalyze).Methods("POST")
-	//analyzer.AnalyzeUrl("https://www.w3.org/TR/1998/REC-CSS2-19980512/sample.html")
 
-	log.Println("Service listening on :8080")
-	err := http.ListenAndServe(":8080", r)
+	// serve UI?
+	if serveUI {
+		r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(webDir))))
+	} else {
+		log.Println("[WARN] UI is disabled! Only API endpoint is exposed.")
+	}
+
+	// start server
+	log.Printf("Service is listening on :%d", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 	if err != nil {
 		log.Fatalf("Error occurred while loading server: %v", err)
 	}
