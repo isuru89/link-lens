@@ -30,6 +30,8 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 	}
 
 	Crawl(info)
+
+	info.PageType = Unknown
 	info.allLinks = nil
 
 	return info, nil

@@ -1,5 +1,10 @@
 package analyzer
 
+const (
+	LoginForm = iota
+	Unknown   = iota
+)
+
 type LinkStats struct {
 	InternalLinks int
 	ExternalLinks int
@@ -13,6 +18,7 @@ type AnalysisData struct {
 	HeadingsCount map[string]int
 	allLinks      map[string]bool
 	LinkStats     LinkStats
+	PageType      uint
 }
 
 type parsingState struct {
