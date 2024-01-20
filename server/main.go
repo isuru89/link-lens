@@ -16,7 +16,8 @@ func main() {
 	r.HandleFunc("/api/analyze", PostAnalyze).Methods("POST")
 	//analyzer.AnalyzeUrl("https://www.w3.org/TR/1998/REC-CSS2-19980512/sample.html")
 
-	err := http.ListenAndServe(":8090", r)
+	log.Println("Service listening on :8080")
+	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatalf("Error occurred while loading server: %v", err)
 	}
