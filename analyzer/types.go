@@ -1,8 +1,8 @@
 package analyzer
 
 const (
-	LoginForm = iota
-	Unknown   = iota
+	LoginForm = "LoginForm"
+	Unknown   = "Unknown"
 )
 
 type LinkStats struct {
@@ -17,7 +17,7 @@ type AnalysisData struct {
 	Title         string
 	HeadingsCount map[string]int
 	LinkStats     LinkStats
-	PageType      uint
+	PageType      string
 }
 
 type parsingState struct {

@@ -276,7 +276,7 @@ func TestAnalyzeUrl_IsLoginForm(t *testing.T) {
 		</body>
 		</html>`)
 
-	expected := func(url string, pageType uint) *AnalysisData {
+	expected := func(url string, pageType string) *AnalysisData {
 		return &AnalysisData{
 			SourceUrl:     url,
 			HtmlVersion:   "5",
@@ -288,7 +288,7 @@ func TestAnalyzeUrl_IsLoginForm(t *testing.T) {
 
 	testcases := map[string]struct {
 		url      string
-		pageType uint
+		pageType string
 	}{
 		"Should Be A Login Form":                  {pageType: LoginForm, url: "https://www.linklens.com/test/loginform"},
 		"No Login Form: Only Submit Button":       {pageType: Unknown, url: "https://www.linklens.com/test/loginsubmit"},
