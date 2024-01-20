@@ -56,13 +56,27 @@ func PostAnalyze(w http.ResponseWriter, r *http.Request) {
 
 	result, err := analyzer.AnalyzeUrl(req.Url)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		errObj, _ := json.Marshal(err)
-		w.Write([]byte(errObj))
+		handleAnalysisError(err, w)
 		return
 	}
 
 	content, _ := json.Marshal(result)
 	w.WriteHeader(http.StatusOK)
 	w.Write(content)
+}
+
+func handleAnalysisError(err error, w http.ResponseWriter) {
+	log.Println("[ERROR] " + err.Error())
+	w.WriteHeader(http.StatusInternalServerError)
+	var errObj []byte
+	e, ok := err.(*analyzer.AnalysisError)
+	if ok {
+		errObj, _ = json.Marshal(map[string]interface{}{
+			"errorCode": e.ErrorCode,
+			"message":   e.Cause.Error(),
+		})
+	} else {
+		errObj, _ = json.Marshal(err)
+	}
+	w.Write([]byte(errObj))
 }

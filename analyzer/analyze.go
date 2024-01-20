@@ -20,7 +20,10 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 
 	parsedUrl, err := url.Parse(getUrl)
 	if err != nil {
-		return nil, errors.New("Given URL is malformed!")
+		return nil, &AnalysisError{
+			ErrorCode: ErrorInvalidUrl,
+			Cause:     errors.New("Given URL is malformed!"),
+		}
 	}
 
 	info := NewAnalysis(getUrl)
@@ -39,18 +42,27 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	resp, err := http.Get(url.String())
 	if err != nil {
-		return nil, errors.New("Cannot fetch the content from url!")
+		return nil, &AnalysisError{
+			ErrorCode: RemoteFetchError,
+			Cause:     errors.New("Cannot fetch the content from url!"),
+		}
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return nil, errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode))
+		return nil, &AnalysisError{
+			ErrorCode: UnsuccessfulStatusCode,
+			Cause:     errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode)),
+		}
 	}
 
 	contentTypeHeader := resp.Header.Get("content-type")
 	if strings.Index(strings.ToLower(contentTypeHeader), "text/html") < 0 {
-		return nil, errors.New("Only HTML content types are supported!")
+		return nil, &AnalysisError{
+			ErrorCode: InvalidContentType,
+			Cause:     errors.New("Only HTML content types are supported!"),
+		}
 	}
 
 	log.Printf("Recieved a valid html content from %s", url.String())
