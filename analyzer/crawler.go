@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"log"
+	"slices"
 	"sync"
 )
 
@@ -14,9 +15,9 @@ func crawl(info *AnalysisData, status *parsingState) {
 
 	for k := range status.allLinks {
 		if isAbsoluteUrl(k) {
-			linkStats.ExternalLinks++
+			linkStats.ExternalLinkCount++
 		} else {
-			linkStats.InternalLinks++
+			linkStats.InternalLinkCount++
 		}
 	}
 	info.LinkStats = linkStats
@@ -43,6 +44,7 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 
 	wg.Wait()
 
+	slices.Sort(info.LinkStats.InvalidLinks)
 	log.Printf("Finished crawling all links in the site %s", info.ID())
 }
 
@@ -53,7 +55,8 @@ func crawlUrl(url string, info *AnalysisData, mtx *sync.Mutex) {
 	if !isValid {
 		log.Printf("Inaccessible link found! %s [Status: %d]", checkUrl, statusCode)
 		mtx.Lock()
-		info.LinkStats.InvalidLinks++
+		info.LinkStats.InvalidLinkCount++
+		info.LinkStats.InvalidLinks = append(info.LinkStats.InvalidLinks, checkUrl)
 		mtx.Unlock()
 	} else {
 		log.Printf("link ok! %s [Status: %d]", checkUrl, statusCode)

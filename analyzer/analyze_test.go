@@ -41,9 +41,9 @@ func TestAnalyzeUrl_LinkTypesCrawl(t *testing.T) {
 			Title:         "Test Title",
 			HeadingsCount: map[string]int{},
 			LinkStats: LinkStats{
-				InternalLinks: 3,
-				ExternalLinks: 1,
-				InvalidLinks:  0,
+				InternalLinkCount: 3,
+				ExternalLinkCount: 1,
+				InvalidLinkCount:  0,
 			},
 			PageType: Unknown,
 		}, info)
@@ -59,7 +59,7 @@ func TestAnalyzeUrl_InAccessibleLinks(t *testing.T) {
 		<title>Test NX Links</title>
 		<body>
 			<a href="/siterelative">site rel link</a>
-			<a href="/siterelative/nx">site rel link</a>
+			<a href="/st-relative/nx">site rel link</a>
 			<a href="pathrelative/page1">path rel link</a>
 			<a href="pathrelative/pagenx">path rel link</a>
 			<a href="pathrelative/pageerr">path error link</a>
@@ -91,9 +91,15 @@ func TestAnalyzeUrl_InAccessibleLinks(t *testing.T) {
 			Title:         "Test NX Links",
 			HeadingsCount: map[string]int{},
 			LinkStats: LinkStats{
-				InternalLinks: 7,
-				ExternalLinks: 2,
-				InvalidLinks:  4, // anchor links will not be counted
+				InternalLinkCount: 7,
+				ExternalLinkCount: 2,
+				InvalidLinkCount:  4, // anchor links will not be counted
+				InvalidLinks: []string{
+					"https://www.linklens.com/check/pathrelative/pageerr",
+					"https://www.linklens.com/check/pathrelative/pagenx",
+					"https://www.linklens.com/st-relative/nx",
+					"https://www.othersite.com/test/y/nx",
+				},
 			},
 			PageType: Unknown,
 		}, info)

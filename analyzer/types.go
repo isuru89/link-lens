@@ -6,9 +6,10 @@ const (
 )
 
 type LinkStats struct {
-	InternalLinks int
-	ExternalLinks int
-	InvalidLinks  int
+	InternalLinkCount int
+	ExternalLinkCount int
+	InvalidLinkCount  int
+	InvalidLinks      []string
 }
 
 type AnalysisData struct {

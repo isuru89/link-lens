@@ -65,9 +65,12 @@ It will return a response similar to what shown below, if the operation was succ
       "H4": 2
    },
    "LinkStats": {
-      "InternalLinks": 5,
-      "ExternalLinks": 8,
-      "InvalidLinks": 0
+      "InternalLinkCount": 5,
+      "ExternalLinkCount": 8,
+      "InvalidLinkCount": 1,
+      "InvalidLinks": [
+         "https://non-existence.com/url"
+      ]
    },
    "PageType": "Unknown"
 }
