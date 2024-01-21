@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"server/main/analyzer"
 
 	"github.com/gorilla/mux"
 )
@@ -21,9 +19,11 @@ func main() {
 
 	r := mux.NewRouter()
 
+	log.Println("Registering end points:")
+	contextPath := "/api"
 	// register routes
-	r.HandleFunc("/api/health", HealthEndPoint).Methods("GET")
-	r.HandleFunc("/api/analyze", PostAnalyze).Methods("POST")
+	HealthEndPoint(contextPath).Register(r)
+	AnalyzeEndPoint(contextPath).Register(r)
 
 	// serve UI?
 	if serveUI {
@@ -38,45 +38,4 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error occurred while loading server: %v", err)
 	}
-}
-
-func HealthEndPoint(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-}
-
-func PostAnalyze(w http.ResponseWriter, r *http.Request) {
-	var req AnalyzeRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-
-	if err != nil {
-		log.Fatalf("Error decoding request %s", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	result, err := analyzer.AnalyzeUrl(req.Url)
-	if err != nil {
-		handleAnalysisError(err, w)
-		return
-	}
-
-	content, _ := json.Marshal(result)
-	w.WriteHeader(http.StatusOK)
-	w.Write(content)
-}
-
-func handleAnalysisError(err error, w http.ResponseWriter) {
-	log.Println("[ERROR] " + err.Error())
-	w.WriteHeader(http.StatusInternalServerError)
-	var errObj []byte
-	e, ok := err.(*analyzer.AnalysisError)
-	if ok {
-		errObj, _ = json.Marshal(map[string]interface{}{
-			"errorCode": e.ErrorCode,
-			"message":   e.Cause.Error(),
-		})
-	} else {
-		errObj, _ = json.Marshal(err)
-	}
-	w.Write([]byte(errObj))
 }
