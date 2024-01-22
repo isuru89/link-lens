@@ -1,0 +1,119 @@
+
+.result-panel {
+  background-color: #eeffff;
+  padding: 16px 16px;
+  width: 100%;
+}
+
+.chip {
+  border-radius: 50px;
+  border: 1px solid;
+  border-color: #73b6ca;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  padding: 2px 8px;
+}
+
+.chip-label {
+  padding: 1px;
+}
+
+.chip-value {
+  padding: 1px 8px;
+  background-color: #add8e6;
+  border-radius: 50px;
+  min-width: 12px;
+  text-align: center;
+  margin-right: -4px;
+}
+
+.datarow {
+  padding: 4px 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+#invalid-links {
+  align-items: flex-start;
+}
+
+.datarow-label {
+  text-align: right;
+  font-weight: bold;
+  min-width: 30%
+}
+
+.url-input {
+  margin: 8px 0 0 0;
+  height: 24px;
+  border: 0;
+  border-bottom: 2px solid #888;
+  outline: 0;
+  font-size: 1.3rem;
+  padding: 7px 0;
+  background: transparent;
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: transparent;
+  }
+
+  &:placeholder-shown ~ .form__label {
+    font-size: 1.3rem;
+    cursor: text;
+    top: 20px;
+  }
+}
+
+.err-label {
+  padding: 8px;
+  border-radius: 5px;
+  background-color: #ff000044;
+  color: #ff0000;
+}
+
+/* CSS */
+.btn-analyze {
+  align-items: center;
+  background-color: #0A66C2;
+  border: 0;
+  border-radius: 100px;
+  box-sizing: border-box;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: -apple-system, system-ui, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  justify-content: center;
+  line-height: 20px;
+  margin-top: 8px;
+  min-height: 40px;
+  padding: 0 20px 0 20px;
+  text-align: center;
+  transition: background-color 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s, box-shadow 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s, color 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: middle;
+}
+
+.btn-analyze:hover,
+.btn-analyze:focus { 
+  background-color: #16437E;
+  color: #ffffff;
+}
+
+.btn-analyze:active {
+  background: #09223b;
+  color: rgb(255, 255, 255, .7);
+}
+
+.btn-analyze:disabled { 
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, .08);
+  color: rgba(0, 0, 0, .3);
+}

@@ -1,10 +1,24 @@
 const HEADING_LABELS = {
-  H1: "Heading-1",
-  H2: "Heading-2",
-  H3: "Heading-3",
-  H4: "Heading-4",
-  H5: "Heading-5",
-  H6: "Heading-6",
+  H1: "H1",
+  H2: "H2",
+  H3: "H3",
+  H4: "H4",
+  H5: "H5",
+  H6: "H6",
+};
+
+const Chip = ({ label, value, bgColor, valueBgColor, color }) => {
+  return (
+    <div
+      className="chip"
+      style={{ backgroundColor: bgColor, borderColor: color, color }}
+    >
+      <div className="chip-label">{label}</div>
+      <div className="chip-value" style={{ backgroundColor: valueBgColor }}>
+        {value}
+      </div>
+    </div>
+  );
 };
 
 const LinkStatsSection = ({
@@ -14,52 +28,74 @@ const LinkStatsSection = ({
   InvalidLinks = [],
 }) => {
   return (
-    <div>
-      <span>Links: </span>
-      <div>
-        <div>
-          <span>Internal Links: </span>
-          <span>{InternalLinkCount}</span>
-        </div>
-        <div>
-          <span>External Links: </span>
-          <span>{ExternalLinkCount}</span>
-        </div>
-        <div>
-          <span>Inaccessible Links: </span>
-          <span>{InvalidLinkCount}</span>
-        </div>
-        {InvalidLinks && InvalidLinks.length > 0 && (
-          <ol>
-            {InvalidLinks.map((lnk) => (
-              <li>{lnk}</li>
-            ))}
-          </ol>
-        )}
-      </div>
-    </div>
+    <>
+      <DataRow
+        label={"Links:"}
+        value={
+          <div style={{ display: "flex", gap: "4px" }}>
+            <Chip label={"Internal"} value={InternalLinkCount} />
+            <Chip label={"External"} value={ExternalLinkCount} />
+            <Chip
+              label={"Invalid"}
+              value={InvalidLinkCount}
+              bgColor={"#ff000011"}
+              valueBgColor={"#ff000022"}
+              color={"#ff0000"}
+            />
+          </div>
+        }
+      />
+      {InvalidLinks && InvalidLinks.length > 0 && (
+        <DataRow
+          id="invalid-links"
+          label={"Invalid Links:"}
+          value={
+            <div>
+              {InvalidLinks.map((l) => (
+                <div>• {l}</div>
+              ))}
+            </div>
+          }
+        />
+      )}
+    </>
   );
 };
 
 const HeadingsSection = ({ HeadingsCount }) => {
   return (
-    <div>
-      <span>Headings Count: </span>
-      <div>
-        {Object.keys(HeadingsCount).map((key) => {
-          return (
-            <div>
-              <span>{HEADING_LABELS[key] || key}: </span>
-              <span>{HeadingsCount[key] || 0}</span>
-            </div>
-          );
-        })}
-      </div>
+    <DataRow
+      label={"Headings:"}
+      value={
+        <div style={{ display: "flex", gap: "4px" }}>
+          {Object.keys(HeadingsCount).map((key) => {
+            return (
+              <Chip
+                label={`${HEADING_LABELS[key] || key}`}
+                value={HeadingsCount[key] || 0}
+              />
+            );
+          })}
+        </div>
+      }
+    />
+  );
+};
+
+const DataRow = ({ id, label, value }) => {
+  return (
+    <div id={id} className="datarow">
+      <div className="datarow-label">{label}</div>
+      <div className="datarow-value">{value}</div>
     </div>
   );
 };
 
-export const LinkInfo = ({ data }) => {
+const formatElapsed = (elapsed) => {
+  return Math.fround((elapsed / 1000.0) * 1000) / 1000;
+};
+
+export const LinkInfo = ({ data, elapsed = -1 }) => {
   const {
     HtmlVersion,
     Title,
@@ -69,19 +105,17 @@ export const LinkInfo = ({ data }) => {
   } = data;
 
   return (
-    <div>
-      <div>
-        <span>Html Version: </span>
-        <span>{HtmlVersion}</span>
-      </div>
-      <div>
-        <span>Title: </span>
-        <span>{Title}</span>
-      </div>
-      <div>
-        <span>Page Type: </span>
-        <span>{PageType}</span>
-      </div>
+    <div className="result-panel">
+      {elapsed > 0 && (
+        <div
+          style={{ textAlign: "right", fontSize: "12px", fontStyle: "italic" }}
+        >
+          Elapsed: {formatElapsed(elapsed)} seconds
+        </div>
+      )}
+      <DataRow label={"HTML Version:"} value={HtmlVersion} />
+      <DataRow label={"Title:"} value={Title} />
+      <DataRow label={"Page Type:"} value={PageType} />
       <HeadingsSection HeadingsCount={HeadingsCount} />
       <LinkStatsSection
         InternalLinkCount={LinkStats["InternalLinkCount"]}
