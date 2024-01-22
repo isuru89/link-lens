@@ -1,3 +1,5 @@
 server/server
+main/main
+main/linklens
 **/*.out
 cover.html

@@ -3,7 +3,6 @@ package analyzer
 import (
 	"log"
 	"slices"
-	"sync"
 )
 
 func crawl(info *AnalysisData, status *parsingState) {
@@ -26,39 +25,43 @@ func crawl(info *AnalysisData, status *parsingState) {
 }
 
 func crawlForValidity(info *AnalysisData, status *parsingState) {
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	invalidlinkchannel := make(chan LinkStatus)
+	count := 0
 
 	log.Printf("Starting crawling for #%d links...", len(status.allLinks))
 	for k := range status.allLinks {
 		if !isAnchorLink(k) {
-			wg.Add(1)
 
 			checkUrl := k
+			count++
+
 			go func() {
-				defer wg.Done()
-				crawlUrl(checkUrl, info, &mutex)
+				crawlUrl(checkUrl, info, invalidlinkchannel)
 			}()
 		}
 	}
 
-	wg.Wait()
+	for event := range invalidlinkchannel {
+		count--
+
+		if !event.IsValid {
+			log.Printf("Invalid link found! url=%s, status=%d", event.Url, event.StatusCode)
+			info.LinkStats.InvalidLinkCount++
+			info.LinkStats.InvalidLinks = append(info.LinkStats.InvalidLinks, event.Url)
+		}
+
+		if count <= 0 {
+			close(invalidlinkchannel)
+		}
+	}
 
 	slices.Sort(info.LinkStats.InvalidLinks)
 	log.Printf("Finished crawling all links in the site %s", info.ID())
 }
 
-func crawlUrl(url string, info *AnalysisData, mtx *sync.Mutex) {
+func crawlUrl(url string, info *AnalysisData, c chan LinkStatus) {
 	checkUrl := getFinalUrl(url, info.SourceUrl)
 	isValid, statusCode := findUrlValidity(checkUrl)
 
-	if !isValid {
-		log.Printf("Inaccessible link found! %s [Status: %d]", checkUrl, statusCode)
-		mtx.Lock()
-		info.LinkStats.InvalidLinkCount++
-		info.LinkStats.InvalidLinks = append(info.LinkStats.InvalidLinks, checkUrl)
-		mtx.Unlock()
-	} else {
-		log.Printf("link ok! %s [Status: %d]", checkUrl, statusCode)
-	}
+	c <- LinkStatus{Url: checkUrl, IsValid: isValid, StatusCode: statusCode}
 }

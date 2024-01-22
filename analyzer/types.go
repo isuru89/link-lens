@@ -5,6 +5,12 @@ const (
 	Unknown   = "Unknown"
 )
 
+type LinkStatus struct {
+	Url        string
+	IsValid    bool
+	StatusCode int
+}
+
 type LinkStats struct {
 	InternalLinkCount int
 	ExternalLinkCount int
