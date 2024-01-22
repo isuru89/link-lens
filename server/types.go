@@ -1,4 +1,4 @@
-package main
+package server
 
 type AnalyzeRequest struct {
 	Url string `json:"url"`

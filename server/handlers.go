@@ -1,11 +1,11 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"fmt"
+	"linklens/analyzer"
 	"log"
 	"net/http"
-	"server/main/analyzer"
 
 	"github.com/gorilla/mux"
 )

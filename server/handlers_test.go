@@ -1,10 +1,10 @@
-package main
+package server
 
 import (
 	"encoding/json"
+	"linklens/analyzer"
 	"net/http"
 	"net/http/httptest"
-	"server/main/analyzer"
 	"strings"
 	"testing"
 

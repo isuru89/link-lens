@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"linklens/server"
 	"log"
 	"net/http"
 
@@ -22,8 +23,8 @@ func main() {
 	log.Println("Registering end points:")
 	contextPath := "/api"
 	// register routes
-	HealthEndPoint(contextPath).Register(r)
-	AnalyzeEndPoint(contextPath).Register(r)
+	server.HealthEndPoint(contextPath).Register(r)
+	server.AnalyzeEndPoint(contextPath).Register(r)
 
 	// serve UI?
 	if serveUI {
