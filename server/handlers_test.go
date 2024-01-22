@@ -94,3 +94,35 @@ func TestAnalyze_400_InvalidURL(t *testing.T) {
 		}
 	})
 }
+
+func TestAnalyze_200_Success(t *testing.T) {
+	// GIVEN
+	w := httptest.NewRecorder()
+	r := mux.NewRouter()
+	AnalyzeEndPoint("/api").Register(r)
+
+	url := "https://www.google.com"
+	// WHEN
+	r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", strings.NewReader(`{ "url": "https://www.google.com" }`)))
+
+	// THEN
+	if w.Code != http.StatusOK {
+		t.Error("Not expected to throw an error! Actual:", w.Code)
+	}
+	var res analyzer.AnalysisData
+	if err := json.NewDecoder(w.Body).Decode(&res); err != nil {
+		t.Errorf("Expected to return an AnlaysisData object! Received: %s", err.Error())
+	}
+
+	if res.SourceUrl != url {
+		t.Errorf("Expected SourceUrl to be %s, but got %s", url, res.SourceUrl)
+	} else if res.HtmlVersion != "5" {
+		t.Errorf("Expected HtmlVersion to be 5, but got %s", res.HtmlVersion)
+	} else if res.Title == "" {
+		t.Errorf("Expected Title to be non-empty, but got %s", res.Title)
+	} else if res.PageType != analyzer.Unknown {
+		t.Errorf("Expected Title to be Unknown, but got %s", res.PageType)
+	} else if res.LinkStats.ExternalLinkCount <= 0 && res.LinkStats.InternalLinkCount <= 0 && res.LinkStats.InvalidLinkCount <= 0 {
+		t.Error("Expected at least to have one link, but got all zeros")
+	}
+}
