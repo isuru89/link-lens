@@ -11,10 +11,11 @@ import (
 )
 
 func main() {
-	webDir := "./web/build"
+	var webDir string
 	var port int
 	var serveUI bool
 	flag.BoolVar(&serveUI, "ui", true, "Serve the UI or not?")
+	flag.StringVar(&webDir, "webDir", "./web/build", "Directory path to the web artifacts")
 	flag.IntVar(&port, "port", 8080, "Port for the service")
 	flag.Parse()
 

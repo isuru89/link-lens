@@ -7,6 +7,7 @@
 
 Analyze a link and reports basic information.
 
+
 Following information will be reported:
   * HTML version
   * Title of the site
@@ -22,6 +23,7 @@ Following information will be reported:
 
 **Prerequisites:**
   * Should have installed latest [go version](https://go.dev/doc/install) (required minimum v1.21.6)
+  * Latest node.js (at least node v1.18.x or above) (*This is required only if you are expecting to use UI*)
 
 ### Steps
 
@@ -30,35 +32,48 @@ Following information will be reported:
 git clone https://github.com/isuru89/link-lens.git && cd link-lens
 ```
 
- 2. Execute the below command.
+ 2. Execute the below command to get dependencies and execute the server.
 ```
-go run server/...
+go get ./...
+go run linklens/...
 ```
 
   By default, the server will be running on port `8080`. If you want to change this behaviour,
   you can use `--port` argument to pass another port.
 
 ```
-go run server/... --port 8070
+go run linklens/... --port 8070
 ```
 
 **Note:** If you want to build an executable instead of running directly with source code, execute the below commands to get an executable.
 
 ```
-cd server
+cd main
 go build -o linklens
 ```
 
-Above command will create a binary file called `linklens` inside the `server` folder and you can execute it using below command.
+Above command will create a binary file called `linklens` inside the `main` folder and you can execute it using below command.
 
 ```
 ./linklens
 ```
 
+If you want to run with web UI, then you need to pass the path of the built web artifacts using `webDir` argument. The path must be relative to the executable location.
+
+```
+./linklens -webDir=../web/build
+```
+
 #### Using UI
 
-Make sure you are running the program using any of the above methods.
+Make sure you are running the program using any of the above methods. And also, at least node v1.18.x installed.
 
+ * Install and build the web page using below set of commands.
+```
+cd web && npm i && npm run build
+```
+
+ * This will build the required web artifacts and will be served through the application server.
  * Open a browser and navigate to `http://localhost:8080`. If you have changed the port, use it instead of 8080.
  * Type a URL you want to analyze.
  * Click `Analyze` button.
@@ -111,6 +126,11 @@ At anytime, it is possible to know about accepting arguments by invoking help co
 ```
 ./linklens -h
 ```
+
+### Improvements
+
+  * Caching: We could implement a caching for serving same two URLs in a short time instead of analyzing twice.
+  * More Info: Like broken image links.
 
 ### FAQs
 
