@@ -40,16 +40,16 @@ func AnalyzeEndPoint(contextPath string) RouteHandler {
 			return fmt.Sprintf("%s: %s%s", "POST", contextPath, "/analyze")
 		},
 		Handler: func(w http.ResponseWriter, r *http.Request) {
-			if r.Body == nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
 			var req AnalyzeRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 
 			if err != nil {
-				log.Fatalf("Error decoding request %s", err)
-				w.WriteHeader(http.StatusBadRequest)
+				log.Printf("[ERROR] Error decoding request: %v", err)
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			} else if req.Url == "" {
+				log.Println("[ERROR] Analyze URL cannot be empty! Url!")
+				http.Error(w, "Empty URL", http.StatusBadRequest)
 				return
 			}
 
