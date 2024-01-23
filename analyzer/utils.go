@@ -29,7 +29,7 @@ func concatUrl(baseUrl, path string) string {
 
 // isAbsoluteUrl returns true if given href indicates a full absolute url.
 func isAbsoluteUrl(href string) bool {
-	return strings.Index(href, "://") >= 0
+	return strings.Contains(href, "://")
 }
 
 // isRelativeUrl returns true if the given href is a relative url

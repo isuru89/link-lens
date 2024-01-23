@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -22,7 +21,7 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 	if err != nil {
 		return nil, &AnalysisError{
 			ErrorCode: ErrorInvalidUrl,
-			Cause:     errors.New("given URL is malformed!"),
+			Cause:     fmt.Errorf("given url is malformed"),
 		}
 	}
 
@@ -44,7 +43,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	if err != nil {
 		return nil, &AnalysisError{
 			ErrorCode: RemoteFetchError,
-			Cause:     errors.New("Cannot fetch the content from url!"),
+			Cause:     fmt.Errorf("cannot fetch the content from url"),
 		}
 	}
 
@@ -53,7 +52,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	if resp.StatusCode >= 300 {
 		return nil, &AnalysisError{
 			ErrorCode: UnsuccessfulStatusCode,
-			Cause:     errors.New(fmt.Sprintf("Unsuccessful status code returned for the given URL! %d", resp.StatusCode)),
+			Cause:     fmt.Errorf("unsuccessful status code returned for the given url! %d", resp.StatusCode),
 		}
 	}
 
@@ -61,7 +60,7 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	if !strings.Contains(strings.ToLower(contentTypeHeader), "text/html") {
 		return nil, &AnalysisError{
 			ErrorCode: InvalidContentType,
-			Cause:     errors.New("Only HTML content types are supported!"),
+			Cause:     fmt.Errorf("only HTML content types are supported"),
 		}
 	}
 
