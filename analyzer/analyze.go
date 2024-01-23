@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -16,13 +16,13 @@ import (
 var headingRegex = regexp.MustCompile(`(?i)h\d`)
 
 func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
-	log.Printf("Starting the anlysis of url: %s", getUrl)
+	slog.Info("Starting the anlysis of ", "url", getUrl)
 
 	parsedUrl, err := url.Parse(getUrl)
 	if err != nil {
 		return nil, &AnalysisError{
 			ErrorCode: ErrorInvalidUrl,
-			Cause:     errors.New("Given URL is malformed!"),
+			Cause:     errors.New("given URL is malformed!"),
 		}
 	}
 
@@ -58,14 +58,14 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 	}
 
 	contentTypeHeader := resp.Header.Get("content-type")
-	if strings.Index(strings.ToLower(contentTypeHeader), "text/html") < 0 {
+	if !strings.Contains(strings.ToLower(contentTypeHeader), "text/html") {
 		return nil, &AnalysisError{
 			ErrorCode: InvalidContentType,
 			Cause:     errors.New("Only HTML content types are supported!"),
 		}
 	}
 
-	log.Printf("Recieved a valid html content from %s", url.String())
+	slog.Info("Recieved a valid html content from ", "url", url.String())
 	t := html.NewTokenizer(resp.Body)
 	status := &parsingState{inputTypeCounts: map[string]int{}, allLinks: map[string]bool{}}
 

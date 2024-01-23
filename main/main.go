@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"linklens/server"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -21,7 +21,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	log.Println("Registering end points:")
+	slog.Info("Registering end points:")
 	contextPath := "/api"
 	// register routes
 	server.HealthEndPoint(contextPath).Register(r)
@@ -31,13 +31,13 @@ func main() {
 	if serveUI {
 		r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(webDir))))
 	} else {
-		log.Println("[WARN] UI is disabled! Only API endpoint is exposed.")
+		slog.Warn("UI is disabled! Only API endpoint is exposed.")
 	}
 
 	// start server
-	log.Printf("Service is listening on :%d", port)
+	slog.Info("Service is listening on ", "port", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 	if err != nil {
-		log.Fatalf("Error occurred while loading server: %v", err)
+		slog.Error(fmt.Sprintf("Error occurred while loading server: %v", err))
 	}
 }

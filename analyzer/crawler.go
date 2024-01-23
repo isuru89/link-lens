@@ -1,14 +1,14 @@
 package analyzer
 
 import (
-	"log"
+	"log/slog"
 	"slices"
 )
 
 func crawl(info *AnalysisData, status *parsingState) {
 	linkStats := LinkStats{}
 	if len(status.allLinks) == 0 {
-		log.Printf("Nothing to crawl! No links found in the site: %s.", info.SourceUrl)
+		slog.Info("Nothing to crawl! No links found in the ", "site", info.ID())
 		return
 	}
 
@@ -28,7 +28,7 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 	invalidlinkchannel := make(chan LinkStatus)
 	count := 0
 
-	log.Printf("Starting crawling for #%d links...", len(status.allLinks))
+	slog.Info("Starting crawling for links...", "site", info.ID())
 	for k := range status.allLinks {
 		if !isAnchorLink(k) {
 
@@ -45,7 +45,7 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 		count--
 
 		if !event.IsValid {
-			log.Printf("Invalid link found! url=%s, status=%d", event.Url, event.StatusCode)
+			slog.Info("Invalid link found!", "url", event.Url, "status", event.StatusCode)
 			info.LinkStats.InvalidLinkCount++
 			info.LinkStats.InvalidLinks = append(info.LinkStats.InvalidLinks, event.Url)
 		}
@@ -55,8 +55,14 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 		}
 	}
 
+	// sort links so that similar links will be placed close together.
 	slices.Sort(info.LinkStats.InvalidLinks)
-	log.Printf("Finished crawling all links in the site %s", info.ID())
+
+	if info.LinkStats.InvalidLinkCount == 0 {
+		slog.Info("No invalid links found!", "site", info.ID())
+	}
+
+	slog.Info("Finished crawling all links in the ", "site", info.ID())
 }
 
 func crawlUrl(url string, info *AnalysisData, c chan LinkStatus) {

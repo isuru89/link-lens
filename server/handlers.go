@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"linklens/analyzer"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -18,7 +18,7 @@ type RouteHandler struct {
 
 func (h RouteHandler) Register(r *mux.Router) {
 	ep := h.RouteDef(r.NewRoute().HandlerFunc(h.Handler))
-	log.Printf(" - %s", ep)
+	slog.Info(" - ", "route", ep)
 }
 
 func HealthEndPoint(contextPath string) RouteHandler {
@@ -44,11 +44,11 @@ func AnalyzeEndPoint(contextPath string) RouteHandler {
 			err := json.NewDecoder(r.Body).Decode(&req)
 
 			if err != nil {
-				log.Printf("[ERROR] Error decoding request: %v", err)
+				slog.Error("Error decoding request: %v", err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			} else if req.Url == "" {
-				log.Println("[ERROR] Analyze URL cannot be empty! Url!")
+				slog.Error("Analyze URL cannot be empty! Url!")
 				http.Error(w, "Empty URL", http.StatusBadRequest)
 				return
 			}
@@ -67,7 +67,7 @@ func AnalyzeEndPoint(contextPath string) RouteHandler {
 }
 
 func handleAnalysisError(err error, w http.ResponseWriter) {
-	log.Println("[ERROR] " + err.Error())
+	slog.Error(err.Error())
 
 	w.WriteHeader(http.StatusInternalServerError)
 	var errObj []byte
