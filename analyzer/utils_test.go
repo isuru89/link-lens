@@ -1,10 +1,7 @@
 package analyzer
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConcatUrl(t *testing.T) {
@@ -58,10 +55,12 @@ func TestGetFinalUrl(t *testing.T) {
 
 	for _, v := range testcases {
 		if v.doesPanic {
-			assert.Panics(t, func() { getFinalUrl(v.href, v.url) },
-				fmt.Sprintf("Code should panic! concatUrl('%s', '%s')", v.href, v.url))
+			_, err := getFinalUrl(v.href, v.url)
+			if err == nil {
+				t.Fatalf("concatUrl('%s', '%s') => Expected to throw error, but none received", v.href, v.url)
+			}
 		} else {
-			result := getFinalUrl(v.href, v.url)
+			result, _ := getFinalUrl(v.href, v.url)
 			if result != v.expected {
 				t.Fatalf("concatUrl('%s', '%s') => Expected: %s, but recieved: %s", v.href, v.url, v.expected, result)
 			}

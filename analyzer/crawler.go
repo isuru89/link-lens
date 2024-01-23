@@ -28,7 +28,7 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 	invalidlinkchannel := make(chan LinkStatus)
 	count := 0
 
-	slog.Info("Starting crawling for links...", "site", info.ID())
+	slog.Info("Starting crawling for links...", "site", info.ID(), "pending#", len(status.allLinks))
 	for k := range status.allLinks {
 		if !isAnchorLink(k) {
 
@@ -66,8 +66,12 @@ func crawlForValidity(info *AnalysisData, status *parsingState) {
 }
 
 func crawlUrl(url string, info *AnalysisData, c chan LinkStatus) {
-	checkUrl := getFinalUrl(url, info.SourceUrl)
-	isValid, statusCode := findUrlValidity(checkUrl)
+	checkUrl, err := getFinalUrl(url, info.SourceUrl)
+	isValid := false
+	statusCode := 999
+	if err == nil {
+		isValid, statusCode = findUrlValidity(checkUrl)
+	}
 
 	c <- LinkStatus{Url: checkUrl, IsValid: isValid, StatusCode: statusCode}
 }

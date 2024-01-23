@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -48,45 +49,45 @@ func isAnchorLink(href string) bool {
 
 // getFinalUrl returns the final absolute url we need to fetch or check.
 // This modifies the href as necessary with the source url analyzing.
-func getFinalUrl(href, sourceUrl string) string {
+func getFinalUrl(href, sourceUrl string) (string, error) {
 	if sourceUrl == "" {
-		panic("source URL cannot be empty!")
+		return "", fmt.Errorf("source url cannot be empty")
 	}
 
 	baseUrlParts := baseUrlRegex.FindStringSubmatch(sourceUrl)
 	if baseUrlParts == nil {
-		panic("Unable to find valid base url! Either its unsupported portocol or malformed url!")
+		return "", fmt.Errorf("unable to find valid base url! either its unsupported portocol or malformed url")
 	}
 
 	if href == "" {
-		return sourceUrl
+		return sourceUrl, nil
 	}
 
 	if isAbsoluteUrl(href) {
 		// check for valid protocol
 		hrefParts := baseUrlRegex.FindStringSubmatch(href)
 		if hrefParts == nil {
-			panic("Unsupported href! Either its unsupported portocol or malformed url!")
+			return "", fmt.Errorf("unsupported href! either its unsupported portocol or malformed url")
 		}
-		return href
+		return href, nil
 	} else if isAnchorLink(href) {
-		return sourceUrl + href
+		return sourceUrl + href, nil
 	}
 
 	baseUrl := baseUrlParts[1]
 
 	if isRelativeUrl(href) {
-		return concatUrl(baseUrl, href)
+		return concatUrl(baseUrl, href), nil
 	}
 
 	pos := strings.LastIndex(sourceUrl, "/")
 	dpos := strings.LastIndex(sourceUrl, "//")
 	if pos > 0 && dpos < pos-1 {
-		return sourceUrl[:pos+1] + href
+		return sourceUrl[:pos+1] + href, nil
 	} else if pos > 0 && dpos == pos-1 {
-		return concatUrl(sourceUrl, href)
+		return concatUrl(sourceUrl, href), nil
 	}
-	return href
+	return href, nil
 }
 
 // FindUrlValidity returns true if this given link is a valid one or not
