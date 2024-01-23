@@ -31,44 +31,49 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-func TestAnalyze_BadRequests(t *testing.T) {
+func TestAnalyze_Errors(t *testing.T) {
+	testcases := map[string]struct {
+		requestBody interface{}
+		statusCode  int
+	}{
+		"With Malformed Json": {
+			requestBody: "{",
+			statusCode:  400,
+		},
+		"No Request Body": {
+			requestBody: nil,
+			statusCode:  400,
+		},
+		"Empty Request Body": {
+			requestBody: "",
+			statusCode:  400,
+		},
+		"Json, but No URL": {
+			requestBody: "{}",
+			statusCode:  400,
+		},
+	}
+
 	// GIVEN
 	r := mux.NewRouter()
 	AnalyzeEndPoint("/api").Register(r)
 
-	t.Run("When Malformed Json", func(t *testing.T) {
-		// WHEN
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", strings.NewReader("{")))
+	for name, test := range testcases {
+		t.Run(name, func(t *testing.T) {
+			// WHEN
+			w := httptest.NewRecorder()
+			if test.requestBody == nil {
+				r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", nil))
+			} else {
+				r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", strings.NewReader(test.requestBody.(string))))
+			}
 
-		// THEN
-		if w.Code != http.StatusBadRequest {
-			t.Error("Expected to have status code 400! Actual:", w.Code, w.Body)
-		}
-	})
-
-	t.Run("When No Request Body", func(t *testing.T) {
-		// WHEN
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", nil))
-
-		// THEN
-		if w.Code != http.StatusBadRequest {
-			t.Error("Expected to have status code 400! Actual:", w.Code, w.Body)
-		}
-	})
-
-	t.Run("Json, but No URL", func(t *testing.T) {
-		// WHEN
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, httptest.NewRequest("POST", "/api/analyze", strings.NewReader("{}")))
-
-		// THEN
-		if w.Code != http.StatusBadRequest {
-			t.Error("Expected to have status code 400! Actual:", w.Code, w.Body)
-		}
-	})
-
+			// THEN
+			if w.Code != http.StatusBadRequest {
+				t.Errorf("Expected to have status code %d! Actual: %d", test.statusCode, w.Code)
+			}
+		})
+	}
 }
 
 func TestAnalyze_400_InvalidURL(t *testing.T) {
