@@ -21,6 +21,14 @@ jobs:
       with:
         go-version: '1.21.6'
 
+    - name: Get Dependencies
+      run: go mod download
+
+    - name: Linting
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: v1.54
+
     - name: Build
       run: go build -v ./...
 
