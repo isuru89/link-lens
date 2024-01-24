@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -14,8 +15,8 @@ import (
 
 var headingRegex = regexp.MustCompile(`(?i)h\d`)
 
-func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
-	slog.Info("Starting the anlysis of ", "url", getUrl)
+func AnalyzeUrl(getUrl string, crawler Crawler) (*AnalysisData, error) {
+	slog.Info("Starting the anlysis of ", "url", getUrl, "crawler", reflect.TypeOf(crawler).Elem())
 
 	parsedUrl, err := url.Parse(getUrl)
 	if err != nil {
@@ -31,8 +32,11 @@ func AnalyzeUrl(getUrl string) (*AnalysisData, error) {
 		return nil, errp
 	}
 
-	crawl(info, status)
+	// crawl links
+	stats := crawler.Crawl(info.SourceUrl, status.allLinks)
+	info.LinkStats = *stats
 
+	// guess page type...
 	derivePageType(status, info)
 
 	return info, nil

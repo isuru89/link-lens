@@ -327,7 +327,7 @@ func mockHtmlUrlWithStatusCode(path, response string, statusCode int) {
 }
 
 func callAnalysisUrlSuccess(t *testing.T, url string) *AnalysisData {
-	info, err := AnalyzeUrl(url)
+	info, err := AnalyzeUrl(url, &OneDepthCrawler{})
 	if err != nil {
 		t.Fatalf("Not suppose to throw an error! %v", err)
 	}

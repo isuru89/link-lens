@@ -53,7 +53,10 @@ func AnalyzeEndPoint(contextPath string) RouteHandler {
 				return
 			}
 
-			result, err := analyzer.AnalyzeUrl(req.Url)
+			// We could control the crawl behaviour may be using another field from request body.
+			// So, a client may be able to specify how many depths should traverse.
+			crawler := &analyzer.OneDepthCrawler{}
+			result, err := analyzer.AnalyzeUrl(req.Url, crawler)
 			if err != nil {
 				handleAnalysisError(err, w)
 				return

@@ -5,68 +5,70 @@ import (
 	"slices"
 )
 
-func crawl(info *AnalysisData, status *parsingState) {
-	linkStats := LinkStats{}
-	if len(status.allLinks) == 0 {
-		slog.Info("Nothing to crawl! No links found in the ", "site", info.ID())
-		return
+// Crawl crawls all given links in the given base url and returns statistics about
+// the nature of links encountered. Such as, whether a link is internal, external or invalid.
+// Also, it reports all invalid links found separately.
+func (c *OneDepthCrawler) Crawl(baseUrl string, links map[string]bool) *LinkStats {
+	linkStats := &LinkStats{}
+	if len(links) == 0 {
+		return linkStats
 	}
 
-	for k := range status.allLinks {
-		if isAbsoluteUrl(k) {
+	for link := range links {
+		if isAbsoluteUrl(link) {
 			linkStats.ExternalLinkCount++
 		} else {
 			linkStats.InternalLinkCount++
 		}
 	}
-	info.LinkStats = linkStats
 
-	crawlForValidity(info, status)
+	crawlForValidity(baseUrl, linkStats, links)
+	return linkStats
 }
 
-func crawlForValidity(info *AnalysisData, status *parsingState) {
-	invalidlinkchannel := make(chan LinkStatus)
+func crawlForValidity(baseUrl string, stats *LinkStats, links map[string]bool) {
+	invalidLinkChannel := make(chan LinkStatus)
 	count := 0
 
-	slog.Info("Starting crawling for links...", "site", info.ID(), "pending#", len(status.allLinks))
-	for k := range status.allLinks {
+	slog.Info("Starting crawling for links...", "site", baseUrl, "pending#", len(links))
+	for k := range links {
 		if !isAnchorLink(k) {
 
 			checkUrl := k
 			count++
 
 			go func() {
-				crawlUrl(checkUrl, info, invalidlinkchannel)
+				crawlUrl(checkUrl, baseUrl, invalidLinkChannel)
 			}()
 		}
 	}
 
-	for event := range invalidlinkchannel {
+	for event := range invalidLinkChannel {
 		count--
 
 		if !event.IsValid {
 			slog.Info("Invalid link found!", "url", event.Url, "status", event.StatusCode)
-			info.LinkStats.InvalidLinkCount++
-			info.LinkStats.InvalidLinks = append(info.LinkStats.InvalidLinks, event.Url)
+			stats.InvalidLinkCount++
+			stats.InvalidLinks = append(stats.InvalidLinks, event.Url)
 		}
 
 		if count <= 0 {
-			close(invalidlinkchannel)
+			close(invalidLinkChannel)
 		}
 	}
 
 	// sort links so that similar links will be placed close together.
-	slices.Sort(info.LinkStats.InvalidLinks)
+	slices.Sort(stats.InvalidLinks)
 
-	if info.LinkStats.InvalidLinkCount == 0 {
-		slog.Info("No invalid links found!", "site", info.ID())
+	if stats.InvalidLinkCount == 0 {
+		slog.Info("No invalid links found!")
 	}
 
-	slog.Info("Finished crawling all links in the ", "site", info.ID())
+	slog.Info("Finished crawling all links in the ", "site", baseUrl)
 }
 
-func crawlUrl(url string, info *AnalysisData, c chan LinkStatus) {
-	checkUrl, err := getFinalUrl(url, info.SourceUrl)
+func crawlUrl(url, baseUrl string, c chan LinkStatus) {
+	checkUrl, err := getFinalUrl(url, baseUrl)
 	isValid := false
 	statusCode := 999
 	if err == nil {
