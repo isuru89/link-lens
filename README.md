@@ -120,6 +120,7 @@ The link-lens program will accept below configurations via command line argument
 
   * `-port`: Port of the server. (*Default port is 8080*)
   * `-ui`: Whether to serve UI or not (*Default is yes*)
+  * `-webDir`: Directory to the web portal artifacts (*Default is ./web/build*)
 
 At anytime, it is possible to know about accepting arguments by invoking help command.
 
@@ -130,7 +131,12 @@ At anytime, it is possible to know about accepting arguments by invoking help co
 ### Improvements
 
   * Caching: We could implement a caching for serving same two URLs in a short time instead of analyzing twice.
-  * More Info: Like broken image links.
+  * More Information: Like broken image links, identify sign-up form or different page types
+
+### Limitations
+
+  * Single-Page Applications (SPA) will not report the accurate statistics, because of the unavailability of page structure.
+  * Links will be verified only in the given anlysis URL. No recursive crawling is supported to identify dead-links further deep under the given website.
 
 ### FAQs
 
