@@ -28,7 +28,10 @@ func HealthEndPoint(contextPath string) RouteHandler {
 			return fmt.Sprintf("%s: %s%s", "GET", contextPath, "/health")
 		},
 		Handler: func(w http.ResponseWriter, r *http.Request) {
-			json.NewEncoder(w).Encode(HealthResponse{Alive: true})
+			err := json.NewEncoder(w).Encode(HealthResponse{Alive: true})
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		},
 	}
 }
@@ -64,7 +67,7 @@ func AnalyzeEndPoint(contextPath string) RouteHandler {
 
 			content, _ := json.Marshal(result)
 			w.WriteHeader(http.StatusOK)
-			w.Write(content)
+			logErrIf(w.Write(content))
 		},
 	}
 }
@@ -84,5 +87,11 @@ func handleAnalysisError(err error, w http.ResponseWriter) {
 	} else {
 		errObj, _ = json.Marshal(err)
 	}
-	w.Write([]byte(errObj))
+	logErrIf(w.Write([]byte(errObj)))
+}
+
+func logErrIf(n int, err error) {
+	if err != nil {
+		slog.Error("Error occurred while writing response!", "error", err)
+	}
 }
