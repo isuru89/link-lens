@@ -2,11 +2,74 @@ package analyzer
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAnalyzeUrl_Errors(t *testing.T) {
+	defer gock.Off()
+
+	tests := map[string]struct {
+		preRun    func()
+		url       string
+		errorCode string
+		errorMsg  string
+	}{
+		"Invalid URL": {
+			preRun:    func() {},
+			url:       ":invalid url",
+			errorCode: ErrorInvalidUrl,
+			errorMsg:  "given url is malformed",
+		},
+		"Non Existence URL": {
+			preRun:    func() {},
+			url:       "http://non-exist.ne",
+			errorCode: RemoteFetchError,
+			errorMsg:  "cannot fetch the content from url",
+		},
+		"Returns != 200": {
+			preRun: func() {
+				gock.New("https://www.othersite.com/test/x").
+					Reply(404).
+					AddHeader("content-type", "text/html").
+					BodyString(`<!doctype html><html>404 Not Exists</html>`)
+			},
+			url:       "https://www.othersite.com/test/x",
+			errorCode: UnsuccessfulStatusCode,
+			errorMsg:  "unsuccessful status code returned for the given url! 404",
+		},
+		"Non HTML": {
+			preRun: func() {
+				gock.New("https://www.othersite.com/test/y").
+					Reply(200).
+					AddHeader("content-type", "application/json").
+					BodyString(`{ "alive": true }`)
+			},
+			url:       "https://www.othersite.com/test/y",
+			errorCode: InvalidContentType,
+			errorMsg:  "only HTML content types are supported",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// GIVEN
+			test.preRun()
+
+			// WHEN
+			_, err := AnalyzeUrl(test.url, &OneDepthCrawler{})
+
+			// THEN
+			if err == nil {
+				assert.Fail(t, "Expected to fail, but did not")
+			}
+			assert.Equal(t, fmt.Sprintf("[%s] %s", test.errorCode, test.errorMsg), err.Error())
+		})
+	}
+}
 
 func TestAnalyzeUrl_LinkTypesCrawl(t *testing.T) {
 	defer gock.Off()
@@ -142,89 +205,85 @@ func TestAnalyzeUrl_HeadingCounts(t *testing.T) {
 func TestAnalyzeUrl_HtmlVersion(t *testing.T) {
 	defer gock.Off()
 
-	// GIVEN
-	mockHtmlUrl("/test/htmlv4", `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-		<html><title>Test HTML V4</title><body></body></html>`)
-	mockHtmlUrl("/test/htmlv5", `<!DOCTYPE HTML"><html><title>Test HTML V5</title><body></body></html>`)
-	mockHtmlUrl("/test/htmlnx", `<html><title>Test HTML Default</title><body></body></html>`)
+	tests := map[string]struct {
+		preRun              func()
+		url                 string
+		expectedHtmlVersion string
+	}{
+		"HTML V4 Test": {
+			preRun: func() {
+				mockHtmlUrl("/test/htmlv4", `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+				<html><title>Test HTML V4</title><body></body></html>`)
+			},
+			url:                 "https://www.linklens.com/test/htmlv4",
+			expectedHtmlVersion: "4",
+		},
+		"HTML V5 Test": {
+			preRun: func() {
+				mockHtmlUrl("/test/htmlv5", `<!DOCTYPE HTML"><html><title>Test HTML V5</title><body></body></html>`)
+			},
+			url:                 "https://www.linklens.com/test/htmlv5",
+			expectedHtmlVersion: "5",
+		},
+		"Default Should Be V5": {
+			preRun: func() {
+				mockHtmlUrl("/test/htmlnx", `<html><title>Test HTML Default</title><body></body></html>`)
+			},
+			url:                 "https://www.linklens.com/test/htmlnx",
+			expectedHtmlVersion: "5",
+		},
+	}
 
-	t.Run("HTML V4 Test", func(t *testing.T) {
-		// WHEN
-		info := callAnalysisUrlSuccess(t, "https://www.linklens.com/test/htmlv4")
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// GIVEN
+			test.preRun()
 
-		// THEN
-		assert.Equal(t, &AnalysisData{
-			SourceUrl:     "https://www.linklens.com/test/htmlv4",
-			HtmlVersion:   "4",
-			Title:         "Test HTML V4",
-			HeadingsCount: map[string]int{},
-			PageType:      Unknown,
-		}, info)
-	})
+			// WHEN
+			info := callAnalysisUrlSuccess(t, test.url)
 
-	t.Run("HTML V5 Test", func(t *testing.T) {
-		// WHEN
-		info := callAnalysisUrlSuccess(t, "https://www.linklens.com/test/htmlv5")
-
-		// THEN
-		assert.Equal(t, &AnalysisData{
-			SourceUrl:     "https://www.linklens.com/test/htmlv5",
-			HtmlVersion:   "5",
-			Title:         "Test HTML V5",
-			HeadingsCount: map[string]int{},
-			PageType:      Unknown,
-		}, info)
-	})
-
-	t.Run("HTML V5 Default Test", func(t *testing.T) {
-		// WHEN
-		info := callAnalysisUrlSuccess(t, "https://www.linklens.com/test/htmlnx")
-
-		// THEN
-		assert.Equal(t, &AnalysisData{
-			SourceUrl:     "https://www.linklens.com/test/htmlnx",
-			HtmlVersion:   "5",
-			Title:         "Test HTML Default",
-			HeadingsCount: map[string]int{},
-			PageType:      Unknown,
-		}, info)
-	})
+			// THEN
+			assert.Equal(t, test.expectedHtmlVersion, info.HtmlVersion)
+		})
+	}
 }
 
 func TestAnalyzeUrl_TitleCapture(t *testing.T) {
 	defer gock.Off()
 
-	// GIVEN
-	mockHtmlUrl("/test/title", `<!doctype html><html><title>Test Title With</title><body></body></html>`)
-	mockHtmlUrl("/test/titlenx", `<!doctype html><html><body></body></html>`)
+	tests := map[string]struct {
+		preRun        func()
+		url           string
+		expectedTitle string
+	}{
+		"Title Exists": {
+			preRun: func() {
+				mockHtmlUrl("/test/title", `<!doctype html><html><title>Test Title With</title><body></body></html>`)
+			},
+			url:           "https://www.linklens.com/test/title",
+			expectedTitle: "Test Title With",
+		},
+		"Title Does Not Exists": {
+			preRun: func() {
+				mockHtmlUrl("/test/titlenx", `<!doctype html><html><body></body></html>`)
+			},
+			url:           "https://www.linklens.com/test/titlenx",
+			expectedTitle: "",
+		},
+	}
 
-	t.Run("Title Exists", func(t *testing.T) {
-		// WHEN
-		info := callAnalysisUrlSuccess(t, "https://www.linklens.com/test/title")
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			// GIVEN
+			test.preRun()
 
-		// THEN
-		assert.Equal(t, &AnalysisData{
-			SourceUrl:     "https://www.linklens.com/test/title",
-			HtmlVersion:   "5",
-			Title:         "Test Title With",
-			HeadingsCount: map[string]int{},
-			PageType:      Unknown,
-		}, info)
-	})
+			// WHEN
+			info := callAnalysisUrlSuccess(t, test.url)
 
-	t.Run("Title Does Not Exists", func(t *testing.T) {
-		// WHEN
-		info := callAnalysisUrlSuccess(t, "https://www.linklens.com/test/titlenx")
-
-		// THEN
-		assert.Equal(t, &AnalysisData{
-			SourceUrl:     "https://www.linklens.com/test/titlenx",
-			HtmlVersion:   "5",
-			Title:         "",
-			HeadingsCount: map[string]int{},
-			PageType:      Unknown,
-		}, info)
-	})
+			// THEN
+			assert.Equal(t, test.expectedTitle, info.Title)
+		})
+	}
 }
 
 func TestAnalyzeUrl_IsLoginForm(t *testing.T) {

@@ -76,10 +76,11 @@ func fetchUrlContent(url *url.URL, info *AnalysisData) (*parsingState, error) {
 		tokenType := t.Next()
 
 		if tokenType == html.ErrorToken {
-			if t.Err() == io.EOF {
-				return status, nil
+			err := t.Err()
+			if err == io.EOF {
+				err = nil
 			}
-			return status, t.Err()
+			return status, err
 		}
 
 		if tokenType == html.DoctypeToken {

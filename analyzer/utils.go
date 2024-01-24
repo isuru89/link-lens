@@ -84,10 +84,8 @@ func getFinalUrl(href, sourceUrl string) (string, error) {
 	dpos := strings.LastIndex(sourceUrl, "//")
 	if pos > 0 && dpos < pos-1 {
 		return sourceUrl[:pos+1] + href, nil
-	} else if pos > 0 && dpos == pos-1 {
-		return concatUrl(sourceUrl, href), nil
 	}
-	return href, nil
+	return concatUrl(sourceUrl, href), nil
 }
 
 // FindUrlValidity returns true if this given link is a valid one or not
