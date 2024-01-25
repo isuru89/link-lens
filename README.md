@@ -132,6 +132,7 @@ At anytime, it is possible to know about accepting arguments by invoking help co
 
   * Caching: We could implement a caching for serving same two URLs in a short time instead of analyzing twice.
   * More Information: Like broken image links, identify sign-up form or different page types
+  * Automatic continuous deployment of this project to a hosting site using Github Actions.
 
 ### Limitations
 
